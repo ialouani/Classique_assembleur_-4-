@@ -1,0 +1,317 @@
+EXERCICE1: instruction imul (entiers signés (generalisation de mul))
+rdtsc calcule le temps mis par le processeur pour faire un travail depuis son RESET(boot) : le temps mesure a une unite:ca sera en cycles. (==4 cad. ca se fait en 4 cycles c'est ce qu'on appelle le temps en cycles du processeur INTEL)
+qst1.:>>>
+n instructions imul dans un programme suivant une fonction de prototype: long long int multiplie(int n) dans un fichier multiplie.s et cette derniere retourne le temps d'execution total en cycles.
+FACILE: (Le calcul DES puissances de 2 (puissance==rdi==n)
+section .text
+global multiplier
+multiplier:
+rdtsc
+push rax
+mov r8,2
+boucle:
+imul r8,r8
+dec rdi
+cmp rdi,0
+jne boucle
+fin:
+pop r9
+rdtsc
+sub rax,r9
+ret
+qst2.:>>>
+APPEL suivant un fichier .c:
+declaration du prototype
+nombre tres grand de l'ordre de millions (en 32 bits ~max===4 milliards donc ca va ) &->>>::
+(((PUIS))) script shell qui appelle 10 fois le programme:
+for i in $(seq 1 10); do
+./code1
+done
+ OR
+n=0
+make clean && make code1
+while((n!=0)) 
+do
+./code1
+((n=n-1))
+done
+->AVANTAGE: il evite de refaire des trucs essentiels dans le bash pour lancer le programme car le bash est deja mis en service dans un fichier shell donc tend vers un vrai~~ temps d'execution de nombre de cycles(ticks) de processeur.(***)
+Rq:
+La premiere version est adaptee a une structuration sans Makefile(l'executable code1 devra etre la pour que ca marche ; mais l'autre version necessite un Makefile (et c'est mieux) et ne peut etre lance depuis le Makefile sinon ERREUR~).
+=>dans tous les cas, le Makefile fait aboutit aux questions 1 et 2 car le target execution_10 dans le Makefile devra executer ./code1 10 fois --version ### de la 1ere dans notre repertoir (multiplie.sh qui fait un make clean puis un make code1) cela est fait en ajoutant a execution_10 la dependance vers'' code1 comme ca depuis le Makefile on peut executer le script sans pour autant ré-appeler le makefile durant l'execution du script (necessite un make clean avant..///)
+qst3:>>
+RQ prealable: un fichier construct.sh sert de creer le sqellette classique d'un fichier C via:
+(emacs $1.c &) | echo "#include<stdio.h>" > $1.c && (>> apres (retour chariot))
+;;voila...
+->debut qst3:
+rq2(importante pour la suite): la remarque (***) se voit dans les executions:
+./code1 -> 6383921 (de l'ordre de 6 millions) --plus petit et plusieurs fois
+make execution_10 -> min(rslts[]) :== 1866434 (~2 millions)
+ =>cela est du au script shell (debut meme valeur) car pour le deuxieme tour de boucle il a tout pas besoin de refaire des sous-trucs imprévisibles il relance l'executable mais avec ./code1 seulement #la. il refait un meme processus il connait bcp de choses (memoire cache) du coup les acces memoires (caches plus rapides) autres que le cache de temps plus long donc se font de moins en moins car c'est le bash unique au lieu de refaire ./code1 avec chargement bash depuis le terminal indirectement => temps reduit d'un facteur de 3 environ.
+=>qst.(3):::::
+deroulement en facteur DE:4:=>>>
+le parametre rdi doit etre un multiple de 4 ainsi au lieu de faire rdi fois les rdi instructions(n instructions) on va faire (4*k=n=>k=rdi/4) -<<k tours de boucle ce qui change c'est que dans un tour on fera 4 fois les instructions au lieu d'une pour avoir n a la fin car 4*k==rdi(car ===n (voir avant)).
+REMARQUE: SANS DEPENDANCES 
+ <=>c'est a dire que une instruction imul parmi les 4 n'ecrit pas dans un registre utilise par une autre ou ne lit pas un registre utilise par une autre;les 4 sont completements independants,cela se fait DIRECT PAR:
+imul r8/9/10/11,r8/9/10/11 4 en 2fois respectivement..////.
+sub rdi,4 cmp rdi,0 jnz boucle 
+=>en ./code2 (apres make code2) on obtient le petit apres de nombreuses (pas tres ../???) executions: 2255400 ~ 2 millions et avant on avait 6 millions donc on vient de gagner d'un facteur ~3 voire 4(machine locales de l'école PAR EXEMPLE..) 
+->EXPLICATION: Un jump en general necessite des incrementations/decrementations d'adresses d'une tres grande valeur donc necessite un temps plus long (car pour revenir a l'adresse d'un bloc d'instructions (en gros le label) il faut ré-appeler un programme de re-set d'adressage en cours pour commencer encore la 'boucle' car le contenu du bloc d'instructions est une plage d'adresses commune (si pas bcp-- d'instructions) mais le pointeur vers cette plage d'adresse se trouve dans une autre plage d'adresses virtuels donc le saut ré-appelle une fonction pour modifier le rip qui va sauter vers l'autre plage d'adressage virtuel pour re-pointer vers le meme bloc d'instructions en cas de resultat nz du dernier cmp(code1/code2) donc ça ferait une perte du temps par rapport a faire ces meme appels un nombre reduit de fois en optimisant le nombre d'instructions dans le bloc pour reduire le nombre de re-pointages vers la plage d'adresses du bloc  ''ainsi reduire considerablement le temps d'execution en coups de tambourres du processeur. C'est pour cela un facteur de 3 est gagné par rapport a la version precedente..///
+qst4:->
+Rq: On gagne d'un facteur 3 presque le meme facteur si on lance depuis le shell au lieu d'executer 10 fois code1 et de retenir le minimale temps d'execution :=temps en cycle du processeur. Meme chose ici le deroulement en 4 fait gagner un facteur 3 donc un temps divise par 3 pour des deroulement en 4 independants (se ramene a la qst1.~/qst2./ -f(makefile_---)) car on economise le temps pour les jump conditionnels qui sont tres longs (expliqué avant) et de MEME si on refait cette derniere suivant un script les valeurs secondaires(incluant la premiere apres l'EXECUTION du script) decroissent: 622190 soit un facteur de 4~--[|3|] car pour la meme raison le bash est charge donc reduction de temps + optimisation des temps de recherche d'adresses par des memoires caches specifiques au microprocesseur. (c'est pour cela qu'un script shell bien evidemment permet d'un seul coup de faire plusieurs executions au lieu de les faire manuellement dans un terminal BIEN evidemment!!)
+DEBUT QST(4):::
+C'est mieux de faire un for pour savoir où s'arreter des le debut (while prend une expression de prog. ->FONCTIONNELLE en valuation via valuations des parametres de ladite fonction) mais pour quelqeu chose d'iteratif SIMPLE, while sur $(seq 1 10) serait mieux.
+=>le registre ecrit par la premiere sera lu par la deuxieme (la 2ieme depend de la premiere car dans un modele d'execution sequentielle elle va attendre le resultat de la 1ere donc dependance) et pour le dernier c'est le registre ecrit par la derniere insctruction qui va etre lu par la premiere (genre de cycle) ; ainsi les 4 instructions imul se suivent dans un mono-cycle de dependance.
+Resultat de l'ordre de 5,5 millions (plus pRECISEMENT: 5864117) [avec le shell on gagne ~2.5 MOINS() de temps (deja explique pq.)] {{{2 353 327}}}.///
+=>=>Explication de l'augmentation du temps ->(par valeur inferieure) a celui de la qst1/1/2[[qst2]]:
+ **LE TEMPS AUGMENTE SI LES INSTRUCTIONS PRESENTENT UNE TELLE DEPENDANCE**
+RQ: en vrai, l'execution via le shell par un target via le Make ne reduit pas le temps MAIS PERMET de mieux mesurer le temps NECESSAIRE au programme seulement (2: valeurs secondaires a l'execution du make *target*)
+RQ2: Le deroulement REDUIT LE TEMPS necessaire au programme en reduisant le nombre de sauts qui conduisent a une modification de rip via des pages d'adressages totalement differentes.(--=>t++(gagner en nombre de cycles)=>temps_FINAL diminue=>mise en evidence du mecanisme architectural d'adressages differents et fonction qui retourne le rip suivant car c'est elle qui prend le temps logiquement(voir cours)).
+=>explication du3:
+En general, avant l'execution de la 1ere se fait puis la 2ieme apres avoir termine la 1ere ainsi de suite (hypothese de fonctionnement sequentiel) donc dans le deuxieme ca sera la meme chose donc T1 doit etre=(T2) ce qui est pas le cas donc cela veut dire que le mode d'execution des machines modernes n'est pas sequentiel.
+ ->Mise en evidence de la validite du modele PIPELINE pour avoir T1!=T2
+En pipeline, la prochaine instruction peut demarrer alors que la deuxieme n'est pas encore terminee(comme un snack qui fabriquerait des sandwichs la 2ieme etape se fait apres un certains temps(pas la deadline du premier) du commencement de la 1ere ce qui parait logique) le seul probleme est les dependances qui imposent des etages nulles dans le suivi du pipeline (qui correspondent a la prochaine instruction decoupee en meme temps que la premiere sur le meme etage au temps t / t++ -t=/leurs sommes ~== *(t++-t) === temps d'execution total donc t++ -t === temps d'execution total / nombres d'etages telque un etage est defini via son temps d'execution (si tous les etages se font en meme temps(imposition -> convention...) max(petites_instructions[i])/ces dernieres se font en meme temps. 
+...BON cela explique bien pourquoi en code3 ca fournit apres execution sur terminal un nombre grand voire 2.5 à 3.5 fois le nombre precedent car le pipeline est omni-présent ici vu les dependances => c'est pour cela que le temps d'exec. augmente par rapport au precedent.
+RQ3: La presence de dependances SUCCESSIVES par rapport a la version meme sans dependances augmente considerablement (niveau0,1,2) 'de 2 vers 0' le temps en cycles du microprocesseur.
+=>eviter la confusion sequentiel/parallele
+EXECUTION SEQUENTIEL: instruction apres une autre.
+CALCUL PARALLELE: calcul d'objets d'instructions en nombre precis variant meme en meme temps.
+>2### difference avec le pipeline::
+LE pipeline permet d'optimiser la complexite temporelle, pour cela il decoupe
+des classes d'instructions en sous-opérations pour que la succession de tels instructions APPARTENNANTES a la meme classe demarre en execution depuis la premiere et demarre la deuxieme des que les informations requises par la premiere sont pretes => 5 ss-operations par exemple ::
+sans pipeline:
+les 5 puis ..les autres 5 des suivantes
+avec pipeline(.):
+les 3 puis les 2 en demarrant les 3 suivantes des que les 3 ss-operations sont finies.
+i.e. que il existe des sous-operations fonctionnelles qui peuvent se faire en meme temps car une n'est pas dependante de l'autre (via un acroissement de transistors=>((loi de Moore donc taille du microprocesseur reste CST.))chaleur augmente mais en 1s on peut faire plus d'instructions qu'avant et le probleme de chaleur est regle par la mise en parallele de plusieurs processeurs(architectures multicoeur) car la loide Moore implique a certain degre un meme espace avec un seul equipement de ventilation donc respecter la loi de Moore en l'arretant mais en mettant en paralleles plusieurs processeurs respectant chacun la loi avec dans 1seulboitier=>chaleur maitrisee car vue avant chaque coeur a son propre systeme de ventilation) ;;c'est pour cela l'architecture pipeline obtenue electroniquement par ceci qui est exploite via le pipeline (surtout pour les multi-coeurs) => le pipeline permet des ss-calculs en meme temps.
+RESUME EXO1:
+qst1:
+->le script permet une diminution du temps des la deuxieme iteration car executer via un shell est plus rapide que de lancer ce que veut faire le shell en terminal car avec le shell vue une boucle il fera des optimisations d'acces (par les caches de processeurs qui visent a reduire le temps d'acces memoire a des trucs triviaux) donc le rax dans la pile tout au debut est <rax_avant (rax_avant correspond a la 1ere iteration de la boucle, rax_suivant de meme(jusqu'au debut de la fonction multiplie/1/2)) ; 2 lancements et l'un depend de l'autre donc rax_suivant<rax_avant => temps_final__avec_script<temps_final__sans_script car le programme et les commandes restent les memes.
+->le temps est de l'ordre de 6 millions de battements (changements d'etats --global du processeur) et gagner un facteur 2.5~3(presque le 1/3 du temps) dans la version script. On rappelle car (2millionsICI) le cache du processeur peut se faire remarquer par une boucle qui se fait via un script et donc le re-set garde (2 lancements) le rax dans la pile ~~le meme et le temps-- pour le prog.2 car deja connait des trucs donc le resultat est confirme.(de la meme maniere on explique pourquoi rslt_1__script>>aux___prochaines[];..///)
+->AVANTAGE: PERMET de mieux savoir le temps relatif a une execution dans un long programme avec des interferences;notamment de fichiers a compiler;de dependances->>targets..etc...
+FORMALISATION:
+EXO1/::
+QST1.:->>
+***Le script rslt1<rslt2 car bcp de choses manquent aux prochains appels deja faites lors du premier (ou retrouvailles rapides via les caches appel impose par la boucle du script).
+ =>Amelioration d'ordre0 du temps d'execution en cas d'incorporation de cette partie dans un code abstrait => tend vers le vrai temps pour un code utile suivant ces machines.
+***Le script donne des resultats inferieurs des le deuxieme par rapport a une execution STANDARD car le cache du processeur vue la boucle(impose via script) INTERVIENT et donc --temps en cycle du programme.[[[PLUS QUE LA MOITIE GAGNEE car il y a meme lors des prochains appels une diminution dans le rax apres un re-set --lancement nouveau qui evite de refaire un include des fonctionnalitees de bash deja faite lors du lancement du script avantEXECUTION. Et donc on demarre avec un taux faible a la fin r(+)->raxf2-rax2 et r(-)->raxf1-rax1 rax2<rax1 et si r(+)-> ~ r(-)-> (concerne le programme dans le fond seulement) raxf2<raxf1 dans le meme ordre pour que l'ecart dans les 2 couples reste cst. DONC a partir d'un rang la variation des resultats vient du fait que:
+avant: on retranche grand+t_execution-grand
+apres: on retranche petit+t_execution-petit et t_execution-- encore ou peut augmenter(..///) d'ou cette variantion INDEPENDANTE DU RE-SET RAX PROCHAIN LANCEMENT.  
+RESUME ULTIME:
+EXO1:
+*qst1*:
+->6M et le script par appels aux caches (boucle dans un environnement au PREALABLE CHARGE) reduit le temps d'acces aux ressources (caches plus rapides que la memoire RAM(memoire electrique morte)) et donc rslt1<rslt2 et les prochains varient selon les optimisations faites aux processeurs par comparaison de plusieurs choses relatives au programme.(mais a partir de rslt2 on a le meme ordre de grandeur)
+ =>Le minimum est 1/3 6M soit 2M (plus que la moitie pour le min car top des optimisations faites..).
+*qst2:*
+->Instruction en deroulement_4: DIMINUE LE TEMPS TOTAL(sans dependances)
+ =>reduit le nombre de sauts (appel a label) qui se traduit par une fonction sur rip qui change de plage d'adressages pour avoir l'adresse du label et repointer vers la meme boucle ; mais avec le deroulement, le nombre de sauts-- et donc on reste de plus en plus sur une meme page d'adresses bien reliees et donc temps--.
+RQ: l'execution par le shell donne le min en un facteur 3 du resultat classique retrouve avant le lancement du script.
+*qst3:*
+->DE MEME (avec dependances)
+ =>Le temps augmente voire se rapproche <>||___2 du temps de *qst1* car le calcul n'est pas sequentiel donc pipeline revele qui permet de demarrer une instruction avant la fin de la deuxieme (=>plusieurs sous-operations relatives a une classe d'instructions en meme temps (nbr_transitors++;nbr_coeurs++../) donc en un temps reduit on peut lancer 2 sous-operations en meme temps au lieu d'une auparavant ; principe du pipeline et donc vue que les ss-calculs relatives sont en parallele maintenant,le temps d'exec. diminue fortement) mais cela necessite l'absence de dependances pour que les etages du pipeline ne contiennent pas des cases vides c'est pour cela que ./code3 affiche UN NOMBRE de cycles tres grand (facteur 3àm<4 dans la plupart des cas) car avec les dependances via un calcul non sequentiel le pipeline fera le but pour code2 mais son efficacite va s'applatir pour code3.
+ C/C: mise en evidence d'une architecture pipeline utilisant des sous-operations de classe d'instructions en mode parallele ; et non pas une execution sequentielle classique comme on aurait du pense avant(ce qui impliquerait t1===t2 ET CE N'est pas le CAS!!!)
+FIN EXERCICE1.
+
+REMARQUES(!!):
+1->script diminue si boucle le temps d'exec.
+2->deroulement d'une boucle en assembleur met en evidence le temps grandiose pour changer rip en cas de sauts (label) par rapport au fait de rester plus que le nombre de fois precedents dans UN meme contenu d'adresses .(generique contenus--)
+3->deroulement sans dependances ne sert a rien car le pipeline n'optimise plus le temps d'execution qui devient ~acelui de 1 par valeur<.(mode non sequentiel)
+4->le parallelisme est un lancement de choses differents en simultané # sequentiel et le pipeline est la division d'une classe d'instructions en ss-operations pour pouvoir optimiser le temps par application de plusieurs sous-operations d'un ensemble d'objets d'instructions (meme classe) en meme temps SANS DEPENDANCE(ici..///) par augmentation du nombre de battements par seconde => HZ augmente=>nbr_transitors++ ||||&& nbr_coeurs++.((=>sous-operations en mode parallele)) <=> difference pipeline et parallelisme.
+ FOR EXAMPLE: 12345
+               12345 au lieu de 1 jusqu'à la fin de 5 (5 etages donc (ss pipeline)) ; là le deuxieme au lieu de faire que le 2_1 fera le 2_1 et le 1_2 donc 2 choses en paralleles au lieu d'une car il en a la capacite electronique donc la programmation du pipeline suivant une amelioration architecturale optimise la complexite.
+
+
+FIN.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
