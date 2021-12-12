@@ -1,0 +1,43 @@
+EXO2:
+code precedent avec imul sans dependances::
+Ajouter dans la 1ere version apres chaque instruction des add avec registres differents(pour garder la caractere de non dependance) + script(reduction d'1/3 les cycles) fournit:
+ t_exec((.))==~~~2 891 441 en minimale d'APRES NOUS.
+ENfin presque le meme temps (par valeur>) de celui precedent (exo1 suivant code2(Makefile)).
+RAPPEL: le type d'instruction n'est pas le meme donc l'explication ne va se faire suivant un pipeline qui optimise le temps d'executions de n instructions similaires;i.e. on peut pas dire que le pipeline assure 2 sous-operations voire 8 en meme temps alors que les classes sont differentes => pas de pipeline ici pour justifier car la sequence d'instructions est marquée remarquée par de nouvelles classes => decoupage different => pas de pipeline ...
+=>EXPLICATION:
+Cela s'explique par le principe du parallelisme d'instructions. 2 instructions differentes independantes peuvent s'executer en meme temps (la force electronique assure une mise en parallele informatisee des classes d'instructions ce qui permet de faire un add et un imul en meme temps au lieu du mode sequentiel) => imul+add(qui le suit) se font en meme temps => temps_1/4===temps_precedent__d'un______imul car les machines modernes sont superscalaires cela veut dire qu'ils peuvent executer des operations arithmetiques binaires en meme temps ; le parallelisme assurant la mise en service de ces machines superscalaires passerait d'un mecanisme de gestion d'acces a l'ALU en augmentant la puissance du processeur donc les transitors nombre ++ <=>> l'ALU comportera 2 branches add et imul au lieu d'avoir 2 ALU a part donc avec l'optimisation de la vitesse en electronique on met les calculs en parallele en multipliant les branches d'entrees de l'ALU les branches sorties aussi pour identifier le resultat relatif au imul et celui au add et l'interieur aussi ce qui est complique..(qui branche1 vers ceci sortie branche add et l'autre partie branche imul sortir branche imul)///// ainsi avec ceci l'appel depuis l'unite de controle a une unite arithmetique et logique peut concerner 2 instructions differentes au lieu d'avoir 2 appels et donc non parallelisme des instructions add et imul, les branches d'acces memoires sont ameliorees parfois, un bouton 0/1 pilote le type d'operation dont le rslt a ecrire en est la cause pour que le CPU ne se melange pas en meme temps ou il va ecrire celui de add ou bien celui de imul (convention) => au lieu d'ecrire le premier apres appel classique cpu (commande de l'unite de controles) puis ecriture du deuxieme on peut ecrire les 2 en memes temps en utilisant le meme bloc memoire redirigé par le bouton 0/1 qui va varier rapidement (avec augmentation potentielle de la structure memoire (taille par exemple(64 BITS pour plus d'adresses(transits)))) et donc en gros a la fin les 2 acces se font dans un temps reduit pour une structure de memoire 'grande' incorporee dans une machine superscalaire.
+*************QST2:
+manque de registres des debut 3 add apres un imul toujours sans dependance..
+ =>Le temps reste pratiquement LE MEME.
+=>=>>>>Les machines superscalaires permettent des calculs suivant le parallelisme (instructions pour ces calculs differentES) via des acces multiples limitees selon la puissance en simultane aux ALU qui permettent de faire 2 operations arithmetiques en meme temps par commande de l'unite de controles du cpu, et avec d'autres add tjrs independance il y a le pipeline qui apparait qui permet de reduire le nombre de cycles pour 2 instructions de meme type en faisant 2 sous-operations en meme temps meme si soit le 1er add soit le deuxieme n'est pas fini soit 2 choses en 1 seul cycle (voir avant) c'est pour cela que le temps n'augmente pas de la maniere dont on voudrait si il y avait pas de pipeline car parallelisme seulement a un certain degre les ALU sont saturees donc au lieu de faire 2 branches de memes instructions en meme temps la deuxieme se fera apres la fin d'un petit nombre d'etapes de la premiere ; cela evite la sur-utilisation des ALU et en meme temps permet de reduire le temps qui peut augmenter par un traitement simultanee de memes operations objets classes sans pour autant traiter ses deux branches ###respectivement en meme temps mais 2 branches differentes donc si c'est l'ALU ca sera lire l'instruction suivante et en meme temps faire ce qu'on doit faire avec l'ALU (l'add precedent) => temps qui devrait augmenter se voit diminuer => les 2 permettents et surtout le deuxieme  DE ne pas trop varier le temps voire le stabiliser suivant la premier valeur du deroulement sans independances en facteur 4 de la boucle d'instructions imul en independance.*
+FIN_EXO2.
+FORMALISATION(RESUME RAPIDE)
+**QST(1)**:
+=>Le temps reste le meme donc le add et le imul se font en meme temps donc vue que ce sont 2 instructions differentes, c'est le parallelisme de calculs qui intervient(principe des machines superscalaires) qui peuvent faire des operations binaires differentes en meme temps (par multiplication du nombre d'alu via le nombre de transitors et raccordement des bus donc en un meme intervalle de temps; on peut faire 2 operations au lieu d'une (vitesse de machines modernes)).
+rq: pas de pipeline car les add et imul sont differents.
+rappel: le pipeline permet un parallelisme de ss-operations differentes appartenant a deux meme types d'instructions decoupees en meme type d'ensemble de ss-operations --types.
+**QST(2)**:
+=>L'ajout des add ne change pratiquement~ rien car le pipeline intervient lors des add successives permettant de ne pas saturer() les appels du cpu aux alu en traitant la problematique d'un suivant..ADD en le combinant avec le precedent et le suivant(les suivants) et en les integrant dans un modele pipeline qui permet de reduire le temps relatif a l'execution des add+1 restants en un temps reduit cest pour cela que le temps reste presque constant dans tous les cas.(Le pipeline a aussi ses limites(dependances,nombres d'etages===nombres d'instructions meme types pouvant etre mis en ss_structure optimale par parallelisme) et le deuxieme point qui voit sa limite lorsque le temps augmente d'un facteur 1/5 environ...)
+FIN_RESUME__EXO2.
+
+FIN TD4.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
